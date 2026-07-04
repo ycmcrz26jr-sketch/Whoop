@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Riga giornaliera di data/history.jsonl (una riga JSON per giorno)",
+  "type": "object",
+  "required": ["date", "whoop", "yazio", "checkin", "report_summary"],
+  "properties": {
+    "date": { "type": "string", "format": "date" },
+    "whoop": {
+      "type": "object",
+      "properties": {
+        "recovery_pct": { "type": "number" },
+        "hrv_ms": { "type": "number" },
+        "rhr_bpm": { "type": "number" },
+        "sleep_hours": { "type": "number" },
+        "sleep_efficiency_pct": { "type": "number" },
+        "strain": { "type": "number" },
+        "workouts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "duration_min": { "type": "number" },
+              "time_of_day": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "yazio": {
+      "type": "object",
+      "properties": {
+        "calories": { "type": "number" },
+        "protein_g": { "type": "number" },
+        "carbs_g": { "type": "number" },
+        "fat_g": { "type": "number" },
+        "weight_kg": { "type": "number" },
+        "meals": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "checkin": {
+      "type": "object",
+      "description": "Risposte alle 2 domande di check-in del giorno; null finché l'utente non risponde",
+      "properties": {
+        "energy_1_5": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "note": { "type": "string" }
+      }
+    },
+    "report_summary": { "type": "string" }
+  },
+  "examples": [
+    {
+      "date": "2026-07-04",
+      "whoop": {
+        "recovery_pct": 68, "hrv_ms": 52, "rhr_bpm": 58,
+        "sleep_hours": 7.2, "sleep_efficiency_pct": 89, "strain": 12.4,
+        "workouts": [{ "type": "corsa", "duration_min": 45, "time_of_day": "18:30" }]
+      },
+      "yazio": {
+        "calories": 2200, "protein_g": 140, "carbs_g": 220, "fat_g": 70,
+        "weight_kg": 78.5, "meals": ["porridge+banana", "insalata di pollo", "panino"]
+      },
+      "checkin": { "energy_1_5": 4, "note": "leggero indolenzimento quadricipiti" },
+      "report_summary": "..."
+    }
+  ]
+}
