@@ -5,53 +5,49 @@ Resoconto giornaliero personalizzato che incrocia recovery/sonno/strain
 suggerimenti su timing allenamento, qualità del cibo, timing integratori e
 orario per dormire — con uno storico che cresce nel tempo.
 
-## Architettura
+## Architettura (100% cloud — funziona dal telefono)
 
-Gira come **attività pianificata locale su Claude Code Desktop** (non come
-Routine cloud): i connettori community per Whoop e Yazio sono server MCP
-locali che le Routine cloud non possono raggiungere. Compromesso: serve PC
-acceso + app Desktop aperta all'orario previsto (attiva "Keep computer
-awake" nelle impostazioni per evitare lo stop).
+Tutto gira come **Routine cloud di Claude Code**: nessun PC acceso, nessuna
+app Desktop, nessun connettore MCP locale. Al posto dei connettori, script
+Python senza dipendenze che chiamano direttamente le API:
+
+- **Whoop**: API ufficiale v2 (`api.prod.whoop.com`), OAuth2 con refresh
+  token rotanti persistiti in `data/whoop_tokens.json`
+- **Yazio**: API non ufficiale v15 (`yzapi.yazio.com`), login email/password —
+  può rompersi con un aggiornamento dell'app
+
+Le credenziali vivono nelle variabili d'ambiente dell'ambiente Claude Code,
+mai nel repository (eccetto i token OAuth Whoop, che richiedono repository
+privato). Setup completo in **[SETUP.md](SETUP.md)**.
 
 ## Struttura del progetto
 
 | Percorso | Contenuto |
 |---|---|
 | `CLAUDE.md` | Istruzioni operative per Claude Code (ruolo, dati, check-in, stile) |
+| `SETUP.md` | I passaggi one-time che restano tuoi (tutti fattibili da telefono) |
+| `scripts/whoop_auth.py` | Autorizzazione OAuth Whoop one-time |
+| `scripts/fetch_whoop.py` | Fetch dati Whoop ultime 48h |
+| `scripts/fetch_yazio.py` | Fetch dati Yazio del giorno |
+| `scripts/daily_fetch.py` | Orchestratore: fetch + aggiornamento storico |
 | `data/history.jsonl` | Storico: una riga JSON per giorno |
 | `data/history.schema.json` | Schema della riga giornaliera, con esempio |
+| `data/raw/` | Payload API grezzi per giorno |
 | `reports/` | Resoconti giornalieri in Markdown (`YYYY-MM-DD.md`) |
 | `SUPPLEMENTS.md` | Il tuo stack integratori (da compilare) |
 
-## Setup one-time (sul tuo computer)
-
-1. Claude Code Desktop installato, abbonamento attivo
-2. Node.js installato (Claude Code te lo segnala se manca)
-3. Account sviluppatore gratuito su [developer.whoop.com](https://developer.whoop.com) → Client ID/Secret
-4. Un connettore MCP per Whoop collegato (chiedi a Claude Code di cercare e
-   installare un server MCP Whoop community e guidarti nell'OAuth)
-5. Le tue credenziali Yazio pronte (email/password) — **attenzione**: Yazio
-   non ha API ufficiale, i connettori usano un'API non documentata e possono
-   rompersi con un aggiornamento dell'app
-6. Clona questo repository in una cartella locale (es. `~/health-tracker/`)
-
 ## Ciclo giornaliero
 
-1. L'attività pianificata parte da sola (es. alle 7:00)
-2. Claude Code recupera i dati Whoop + Yazio delle ultime 24-48h e li
-   aggiunge allo storico
-3. Scrive una bozza di resoconto con i dati oggettivi, e segna le 2 domande
-   di check-in ancora aperte
-4. Quando apri l'app, rispondi alle 2 domande al volo e Claude completa il
-   resoconto con quell'input (schema "bozza + completamento": uno scheduling
-   che si fermi a metà in attesa di una risposta in tempo reale non è un
-   comportamento garantito)
+1. La routine cloud parte da sola ogni mattina (~7:00 ora italiana)
+2. La sessione esegue `scripts/daily_fetch.py`: dati Whoop + Yazio delle
+   ultime 24-48h nello storico
+3. Scrive una bozza di resoconto con i dati oggettivi e le 2 domande di
+   check-in aperte, poi committa e pusha — ricevi la notifica sul telefono
+4. Quando apri l'app, rispondi alle 2 domande e Claude completa il resoconto
+   (schema "bozza + completamento")
 
 ## Primi passi
 
-1. Compila `SUPPLEMENTS.md` con il tuo stack integratori
-2. Fatti guidare da Claude Code nell'installazione dei due connettori MCP
-   (Whoop ufficiale via OAuth, Yazio community)
-3. Fai un **run manuale** ("Run now") prima di programmarlo, per approvare i
-   permessi una volta sola
-4. Solo dopo che un run manuale funziona, attiva la pianificazione giornaliera
+1. Segui **[SETUP.md](SETUP.md)**: network policy, credenziali, OAuth Whoop
+2. Compila `SUPPLEMENTS.md` con il tuo stack integratori
+3. Fai un run manuale in chat prima di fidarti della routine

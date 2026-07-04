@@ -6,12 +6,23 @@ propri limiti — mai "certezze" dove i dati danno solo pattern.
 
 # Dati da recuperare ogni esecuzione
 
+Esegui `python3 scripts/daily_fetch.py`: recupera Whoop (API ufficiale v2) e
+Yazio (API non ufficiale) delle ultime 24-48h, salva i payload grezzi in
+`data/raw/YYYY-MM-DD.json` e aggiorna la riga del giorno in
+`data/history.jsonl`.
+
 - **Whoop**: recovery %, HRV, freq. cardiaca a riposo, fasi/efficienza sonno,
   strain, allenamenti (orario, durata, tipo).
 - **Yazio**: calorie, macro, alimenti loggati, peso corporeo, micronutrienti
-  fuori range.
+  fuori range (usa i grezzi in `data/raw/` per il dettaglio).
 
-Recupera i dati delle ultime 24-48h e aggiungili allo storico.
+Se lo script segnala errori (credenziali mancanti, rete bloccata, API
+cambiata): diagnostica, sistema se possibile, e spiega all'utente cosa manca
+in testa alla bozza del resoconto. I passaggi utente sono in `SETUP.md`.
+
+IMPORTANTE: `data/whoop_tokens.json` viene riscritto a ogni esecuzione
+(refresh token rotanti Whoop) — va SEMPRE committato e pushato insieme al
+resto, altrimenti la prossima esecuzione non potrà autenticarsi.
 
 # Check-in (2 domande)
 
@@ -27,11 +38,15 @@ sempre specificando la base statistica ("negli ultimi 12 giorni...").
 
 # Ciclo giornaliero (bozza + completamento)
 
-1. Recupera i dati Whoop + Yazio delle ultime 24-48h e aggiungili allo storico
+1. Esegui `python3 scripts/daily_fetch.py` (aggiorna storico + grezzi)
 2. Scrivi una bozza di resoconto in `reports/YYYY-MM-DD.md` con i dati
    oggettivi, e segna le 2 domande di check-in ancora aperte
-3. Quando l'utente risponde alle 2 domande, completa il resoconto con
-   quell'input e aggiorna la riga dello storico con il check-in
+3. Committa e pusha TUTTO (report, storico, grezzi, `data/whoop_tokens.json`)
+   sul branch predefinito del repository; se il sistema impone un branch di
+   sessione, pusha lì e segnalalo nel resoconto
+4. Quando l'utente risponde alle 2 domande, completa il resoconto con
+   quell'input, aggiorna `checkin` e `report_summary` nella riga del giorno
+   in `data/history.jsonl`, e committa/pusha di nuovo
 
 # Integratori
 
